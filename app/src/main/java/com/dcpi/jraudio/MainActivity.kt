@@ -132,12 +132,30 @@ class MainActivity : Activity() {
             }
         }
         @JavascriptInterface fun refreshDownloads() { notifyJs("downloads_data", downloads.list().toString()) }
-        @JavascriptInterface fun diagnostics(): String = JSONObject()
-            .put("bridge", true)
-            .put("platform", "android-kotlin")
-            .put("mediaSessionService", true)
-            .put("downloadManager", true)
-            .put("localMediaStore", true).toString()
+        @JavascriptInterface fun requestMediaPermission() {
+            runOnUiThread { requestAudioPermissionIfNeeded() }
+        }
+        @JavascriptInterface fun diagnostics(): String {
+            val audioPermission = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO
+                else Manifest.permission.READ_EXTERNAL_STORAGE
+            val granted = ContextCompat.checkSelfPermission(this@MainActivity, audioPermission) == PackageManager.PERMISSION_GRANTED
+            val notifications = Build.VERSION.SDK_INT < 33 ||
+                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            val count = if (granted) try { library.list().length() } catch (_: Exception) { -1 } else -1
+            return JSONObject()
+                .put("bridge", true)
+                .put("platform", "android-kotlin")
+                .put("sdk", Build.VERSION.SDK_INT)
+                .put("release", Build.VERSION.RELEASE)
+                .put("manufacturer", Build.MANUFACTURER)
+                .put("model", Build.MODEL)
+                .put("audioPermission", granted)
+                .put("notificationPermission", notifications)
+                .put("localAudioCount", count)
+                .put("mediaSessionService", true)
+                .put("downloadManager", true)
+                .put("localMediaStore", true).toString()
+        }
     }
 
     private fun playItem(item: MediaItem) {
