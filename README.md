@@ -12,7 +12,7 @@ Proyecto de la nueva aplicación JR Audio. La primera entrega contiene el protot
 - Biblioteca local mediante `MediaStore`, con reproducción de archivos locales autorizados.
 - Interfaz adaptable con tema oscuro y acento verde; pantallas Inicio, Buscar, Explorar, Biblioteca, Descargas y Ajustes.
 - Diagnóstico de puente y pruebas de variables simuladas de mantenimiento, actualización y preparación.
-- GitHub Actions configura la compilación de APK debug; el resultado de la primera compilación sigue pendiente de verificación.
+- GitHub Actions completó correctamente una compilación APK debug de esta base Android (commit `7e1091e`). Los cambios posteriores de permisos y navegación están en una compilación de verificación adicional.
 
 La reproducción real de esta fase requiere una URL HTTPS directa de audio compatible. El catálogo de canciones de ejemplo continúa siendo ficticio y no se presenta como una biblioteca conectada a servicios musicales.
 
@@ -24,7 +24,7 @@ Abre `index.html` en un navegador moderno. No requiere dependencias ni servidor.
 
 El módulo `downloader/` contiene un worker Python que analiza una URL, descarga el mejor flujo de audio disponible, convierte a MP3 con FFmpeg, intenta incrustar portada/metadatos y guarda subtítulos VTT manuales o automáticos cuando existen. También genera un JSON normalizado para la app. Consulta `downloader/README.md` para instalarlo y ejecutarlo.
 
-El worker Python todavía no está integrado en Android: requiere un entorno Python y binarios FFmpeg/FFprobe compatibles con Android, además de la integración Kotlin para cola, progreso, cancelación y almacenamiento. La reproducción en segundo plano, descargas directas, cola/progreso y lectura de biblioteca local tienen ya una primera implementación Kotlin. Aún deben compilarse y probarse en un dispositivo real. Faltan integración yt-dlp nativa, FFmpeg Android ARM64 verificado, letras sincronizadas, visualizador 3D y conexión de búsquedas online. El panel Render mantiene una integración separada en la interfaz.
+El worker Python todavía no está integrado en Android: requiere un entorno Python y binarios FFmpeg/FFprobe compatibles con Android, además de la integración Kotlin para cola, progreso, cancelación y almacenamiento. La reproducción en segundo plano, descargas directas, cola/progreso y lectura de biblioteca local tienen ya una primera implementación Kotlin. La base nativa compiló en CI, pero todavía falta instalarla y probarla en un teléfono real. Faltan integración yt-dlp nativa, FFmpeg Android ARM64 verificado, letras sincronizadas, visualizador 3D y conexión de búsquedas online. El panel Render mantiene una integración separada en la interfaz.
 
 ## Arquitectura objetivo
 
