@@ -8,6 +8,14 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#27371d,transparent 45%),var(--bg);color:var(--txt);font:15px/1.45 system-ui, sans-serif}.app{max-width:560px;min-height:100dvh;margin:auto;padding-bottom:145px}header{position:sticky;top:0;background:#090d0dee;backdrop-filter:blur(14px);padding:18px;border-bottom:1px solid #ffffff12;z-index:4}.brand{font-size:22px;font-weight:900;letter-spacing:.5px}.brand b{color:var(--green)}main{padding:18px}.screen{display:none}.screen.active{display:block}.eyebrow{color:var(--green);font-size:11px;letter-spacing:1.5px;font-weight:800}.title{font-size:28px;margin:5px 0}.muted{color:var(--muted)}.search{display:flex;gap:8px;margin:16px 0}.search input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;color:white}.btn{background:var(--green);color:#10150b;border:0;border-radius:12px;padding:11px 15px;font-weight:800}.hero{padding:20px;border:1px solid #9bf23b35;border-radius:20px;background:linear-gradient(120deg,#2b421f,#15221b 65%,#151b20);margin:18px 0}.hero h2{font-size:23px;margin:7px 0}.section{display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px}.section h2{font-size:17px;margin:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tile,.track,.setting{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:11px}.art{aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#526d35,#1a2921);display:grid;place-items:center;font-size:42px}.tile h3{font-size:13px;margin:9px 0 2px}.tile p,.track small{color:var(--muted);font-size:11px;margin:0}.list{display:grid;gap:9px}.track{display:flex;align-items:center;gap:12px}.track .art{width:48px;flex:none;font-size:21px}.track .info{flex:1;min-width:0}.track strong{display:block;font-size:13px}.track button{border:0;border-radius:50%;width:35px;height:35px;background:#293729;color:var(--green)}.empty{padding:28px;text-align:center;border:1px dashed #3a464b;border-radius:16px;color:var(--muted)}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);padding:8px 12px max(12px,env(safe-area-inset-bottom));background:linear-gradient(transparent,#090b0d 18%);z-index:5}.mini{display:flex;align-items:center;gap:10px;background:#1b241bee;border:1px solid #405036;border-radius:14px;padding:8px;margin-bottom:8px}.mini .art{width:42px}.mini .info{flex:1}.mini strong{font-size:12px;display:block}.mini small{font-size:10px;color:var(--muted)}.mini button{background:none;border:0;color:var(--green);font-size:19px}nav{display:grid;grid-template-columns:repeat(5,1fr);background:#151b1eee;border:1px solid var(--line);border-radius:17px;padding:5px}.nav{background:none;border:0;color:#9aa6aa;padding:8px 2px;font-size:11px}.nav.active{color:var(--green);background:#a5f54212;border-radius:12px}.modal{display:none;position:fixed;inset:0;background:#000c;z-index:9;align-items:flex-end}.modal.open{display:flex}.player{width:min(100%,560px);margin:auto auto 0;background:linear-gradient(#23331e,#111719 65%);border-radius:25px 25px 0 0;padding:22px 20px max(25px,env(safe-area-inset-bottom));max-height:94dvh;overflow:auto}.close{float:right;background:none;border:0;color:white;font-size:20px}.bigart{width:min(75vw,310px);aspect-ratio:1;margin:25px auto;border-radius:22px;background:linear-gradient(135deg,#607c3e,#182a20);display:grid;place-items:center;font-size:100px}.controls{display:flex;justify-content:space-around;align-items:center;margin:22px}.controls button{background:none;border:0;color:white;font-size:22px}.controls .main{background:var(--green);color:#10150b;width:60px;height:60px;border-radius:50%}.tabs{display:flex;gap:8px}.tabs button{flex:1;background:#ffffff12;border:0;border-radius:10px;padding:10px;color:white}.tabcontent{text-align:center;color:var(--muted);padding:20px 5px}.setting{margin:9px 0}
 </style></head>
 <body><div class="app"><header><div class="brand">JR <b>AUDIO</b></div></header><main>
+<div id="cloudNotice" class="setting" style="border-color:#465b35;margin:0 0 16px">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+    <strong id="cloudTitle">Conectando con JR Audio Control…</strong>
+    <span id="cloudDot" style="width:9px;height:9px;border-radius:50%;background:#d6a84b;flex:none"></span>
+  </div>
+  <p id="cloudMessage" class="muted" style="margin:7px 0 0">Consultando el servicio online.</p>
+  <div id="cloudActions" style="margin-top:10px"></div>
+</div>
 <section id="home" class="screen active"><div class="eyebrow">TU ESPACIO MUSICAL</div><h1 class="title">Descubre música</h1><p class="muted">Tus canciones y nuevos descubrimientos en un solo lugar.</p><div class="search"><input id="homeSearch" placeholder="Buscar canciones o artistas"><button class="btn" onclick="go('search')">Buscar</button></div><div class="hero"><div class="eyebrow">JR AUDIO</div><h2>Tu música, a tu manera</h2><p class="muted">Explora, organiza y reproduce tu biblioteca.</p><button class="btn" onclick="go('explore')">Explorar</button></div><div class="section"><h2>Recomendados</h2></div><div class="grid" id="recommend"></div><div class="section"><h2>Escuchado recientemente</h2></div><div class="list" id="recent"></div></section>
 <section id="search" class="screen"><div class="eyebrow">ENCUENTRA TU MÚSICA</div><h1 class="title">Buscar</h1><div class="search"><input id="query" placeholder="Canción, artista o álbum"><button class="btn" onclick="searchTracks()">Ir</button></div><p class="muted">Búsqueda de demostración local. Las fuentes online aún no están conectadas.</p><div class="list" id="results"></div></section>
 <section id="explore" class="screen"><div class="eyebrow">DESCUBRIMIENTO</div><h1 class="title">Explorar</h1><p class="muted">Colecciones y estilos para descubrir.</p><div class="grid" id="genres"></div></section>
@@ -26,4 +34,57 @@ function searchTracks(){let q=document.getElementById('query').value.toLowerCase
 function playTrack(i){current=tracks[i];document.getElementById('miniTitle').textContent=current.t;document.getElementById('miniArtist').textContent=current.a;document.getElementById('playerTitle').textContent=current.t;document.getElementById('playerArtist').textContent=current.a;playing=true;document.getElementById('playButton').textContent='Ⅱ';openPlayer()}
 function openPlayer(){document.getElementById('player').classList.add('open')}function closePlayer(){document.getElementById('player').classList.remove('open')}function togglePlay(){playing=!playing;document.getElementById('playButton').textContent=playing?'Ⅱ':'▶'}function tab(t){document.getElementById('tabcontent').textContent=t==='lyrics'?'Las letras sincronizadas se integrarán con las fuentes compatibles.':t==='visual'?'El visualizador de audio se activará al integrar el motor de reproducción.':'La cola de reproducción aparecerá aquí.'}
 document.getElementById('homeSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('query').value=e.target.value;go('search');searchTracks()}});document.getElementById('query').addEventListener('keydown',e=>{if(e.key==='Enter')searchTracks()});
+
+const JR_CONTROL_API='https://jr-audio-control-s8ap.onrender.com/api/v1/app-status';
+const JR_STATUS_CACHE='jr_audio_cloud_status_v1';
+function renderCloudStatus(data,offline=false){
+  const title=document.getElementById('cloudTitle'),msg=document.getElementById('cloudMessage'),dot=document.getElementById('cloudDot'),actions=document.getElementById('cloudActions');
+  actions.replaceChildren();
+  if(offline){
+    title.textContent='Modo sin conexión';
+    msg.textContent='No se pudo contactar con Render. La biblioteca y las funciones locales siguen disponibles.';
+    dot.style.background='#d6a84b';return;
+  }
+  if(data.maintenance?.enabled){
+    title.textContent='Mantenimiento del servicio online';
+    msg.textContent=(data.maintenance.message||'Algunas funciones online están temporalmente desactivadas.')+' La música local continúa disponible.';
+    dot.style.background='#e0a33a';
+  }else{
+    title.textContent='JR Audio Control conectado';
+    msg.textContent='Servicio online disponible. Estado sincronizado.';
+    dot.style.background='#a5f542';
+  }
+  if(data.preparing?.enabled){
+    const p=document.createElement('p');p.className='muted';p.style.margin='8px 0 0';
+    p.textContent=(data.preparing.message||'Estamos preparando una nueva versión.')+(data.preparing.version?' ('+data.preparing.version+')':'');
+    actions.appendChild(p);
+  }
+  if(data.update?.available && data.update.url){
+    const note=document.createElement('p');note.className='muted';note.textContent='Nueva versión '+(data.update.version||'disponible')+'. '+(data.update.notes||'');
+    actions.appendChild(note);
+    const link=document.createElement('a');link.href=data.update.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ver actualización';
+    link.style.cssText='display:inline-block;color:#a5f542;font-weight:800;margin-top:8px';
+    actions.appendChild(link);
+  }
+}
+async function checkJRControl(){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const response=await fetch(JR_CONTROL_API,{method:'GET',headers:{'Accept':'application/json'},signal:controller.signal,cache:'no-store'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const data=await response.json();
+    if(data.app!=='JR Audio'||data.api_version!==1)throw new Error('Respuesta API no compatible');
+    localStorage.setItem(JR_STATUS_CACHE,JSON.stringify({savedAt:Date.now(),data}));
+    renderCloudStatus(data,false);
+  }catch(error){
+    try{
+      const cached=JSON.parse(localStorage.getItem(JR_STATUS_CACHE)||'null');
+      if(cached?.data){renderCloudStatus(cached.data,true);return;}
+    }catch(_){}
+    renderCloudStatus(null,true);
+  }finally{clearTimeout(timer)}
+}
+checkJRControl();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkJRControl()});
+
 </script></body></html>
