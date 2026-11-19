@@ -16,13 +16,16 @@ class JRDownloads(private val context: Context) {
         val uri = Uri.parse(url.trim())
         require(uri.scheme == "https" && !uri.host.isNullOrBlank()) { "Solo se admiten enlaces HTTPS directos." }
         val safe = title.replace(Regex("[^A-Za-z0-9 _.-]"), "_").take(90).ifBlank { "JR_Audio" }
+        val ext = uri.lastPathSegment?.substringAfterLast('.', "")?.lowercase()
+            ?.takeIf { it in setOf("mp3", "m4a", "aac", "ogg", "opus", "wav", "flac", "mp4", "webm") }
+            ?: "audio"
         val request = DownloadManager.Request(uri)
             .setTitle(safe)
             .setDescription("Descargando en JR Audio")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(false)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "JR Audio/$safe.mp3")
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "JR Audio/$safe.$ext")
         val id = manager.enqueue(request)
         val ids = prefs.getStringSet("ids", emptySet())!!.toMutableSet()
         ids.add(id.toString())
