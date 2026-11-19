@@ -14,9 +14,11 @@ Proyecto de la nueva aplicación JR Audio. La primera entrega contiene el protot
 
 Abre `index.html` en un navegador moderno. No requiere dependencias ni servidor.
 
-## Pendiente de integración
+## Descargador yt-dlp (núcleo inicial disponible)
 
-Esta versión todavía no es una APK y no incluye todavía el proyecto Android Gradle/Kotlin. Tampoco están conectados yt-dlp, reproducción real, descargas, letras sincronizadas, visualizador de audio 3D, almacenamiento local ni el panel de control de Render. Las canciones mostradas son datos ficticios de demostración.
+El módulo `downloader/` contiene un worker Python que analiza una URL, descarga el mejor flujo de audio disponible, convierte a MP3 con FFmpeg, intenta incrustar portada/metadatos y guarda subtítulos VTT manuales o automáticos cuando existen. También genera un JSON normalizado para la app. Consulta `downloader/README.md` para instalarlo y ejecutarlo.
+
+Este motor todavía no está conectado a una APK: requiere un entorno Python y binarios FFmpeg/FFprobe compatibles con Android, además de la integración Kotlin para cola, progreso, cancelación y almacenamiento. Tampoco están conectados la reproducción real, letras sincronizadas, visualizador 3D ni el panel Render. Las canciones de la interfaz siguen siendo datos ficticios.
 
 ## Arquitectura objetivo
 
