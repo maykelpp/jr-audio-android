@@ -17,8 +17,8 @@ class JRDownloads(private val context: Context) {
         require(uri.scheme == "https" && !uri.host.isNullOrBlank()) { "Solo se admiten enlaces HTTPS directos." }
         val safe = title.replace(Regex("[^A-Za-z0-9 _.-]"), "_").take(90).ifBlank { "JR_Audio" }
         val ext = uri.lastPathSegment?.substringAfterLast('.', "")?.lowercase()
-            ?.takeIf { it in setOf("mp3", "m4a", "aac", "ogg", "opus", "wav", "flac", "mp4", "webm") }
-            ?: "audio"
+            ?.takeIf { it in setOf("mp3", "m4a", "aac", "ogg", "opus", "wav", "flac") }
+            ?: throw IllegalArgumentException("El enlace debe terminar en un formato de audio compatible: MP3, M4A, AAC, OGG, OPUS, WAV o FLAC.")
         val request = DownloadManager.Request(uri)
             .setTitle(safe)
             .setDescription("Descargando en JR Audio")
