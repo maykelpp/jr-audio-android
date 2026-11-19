@@ -7,7 +7,9 @@ Proyecto de la nueva aplicación JR Audio. La primera entrega contiene el protot
 - Proyecto Android nativo Kotlin creado (`app/`, Gradle y Manifest), `minSdk 29` (Android 10).
 - WebView integrada que carga la interfaz desde `app/src/main/assets/index.html`.
 - Puente `JRAndroid` Kotlin → JavaScript para reproducir, pausar, reanudar y detener.
-- Reproductor nativo ExoPlayer/Media3 para URLs HTTPS de audio compatibles.
+- Reproductor nativo ExoPlayer/Media3 mediante `MediaSessionService`, preparado para continuar con la pantalla apagada y controles multimedia del sistema.
+- Descargas directas HTTPS mediante Android `DownloadManager`, con notificación del sistema, cola, progreso y cancelación.
+- Biblioteca local mediante `MediaStore`, con reproducción de archivos locales autorizados.
 - Interfaz adaptable con tema oscuro y acento verde; pantallas Inicio, Buscar, Explorar, Biblioteca, Descargas y Ajustes.
 - Diagnóstico de puente y pruebas de variables simuladas de mantenimiento, actualización y preparación.
 - GitHub Actions configura la compilación de APK debug; el resultado de la primera compilación sigue pendiente de verificación.
@@ -22,7 +24,7 @@ Abre `index.html` en un navegador moderno. No requiere dependencias ni servidor.
 
 El módulo `downloader/` contiene un worker Python que analiza una URL, descarga el mejor flujo de audio disponible, convierte a MP3 con FFmpeg, intenta incrustar portada/metadatos y guarda subtítulos VTT manuales o automáticos cuando existen. También genera un JSON normalizado para la app. Consulta `downloader/README.md` para instalarlo y ejecutarlo.
 
-El worker Python todavía no está integrado en Android: requiere un entorno Python y binarios FFmpeg/FFprobe compatibles con Android, además de la integración Kotlin para cola, progreso, cancelación y almacenamiento. La reproducción por URL directa ya tiene una primera integración nativa, pero aún faltan servicio multimedia en segundo plano, selección de archivos locales, letras sincronizadas, visualizador 3D y conexión de búsquedas online. El panel Render mantiene una integración separada en la interfaz.
+El worker Python todavía no está integrado en Android: requiere un entorno Python y binarios FFmpeg/FFprobe compatibles con Android, además de la integración Kotlin para cola, progreso, cancelación y almacenamiento. La reproducción en segundo plano, descargas directas, cola/progreso y lectura de biblioteca local tienen ya una primera implementación Kotlin. Aún deben compilarse y probarse en un dispositivo real. Faltan integración yt-dlp nativa, FFmpeg Android ARM64 verificado, letras sincronizadas, visualizador 3D y conexión de búsquedas online. El panel Render mantiene una integración separada en la interfaz.
 
 ## Arquitectura objetivo
 
