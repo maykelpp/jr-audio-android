@@ -44,8 +44,52 @@ function row(x,i){return '<div class="track"><div class="art">'+['♫','◈','�
 document.getElementById('recommend').innerHTML=tracks.slice(0,4).map(card).join('');document.getElementById('recent').innerHTML=tracks.slice(4).map(row).join('');document.getElementById('genres').innerHTML=['Electrónica','Lo-fi','Ambient','Synthwave','Chill','Instrumental'].map((g,i)=>'<article class="tile"><div class="art">'+['◈','♫','▤','♪'][i%4]+'</div><h3>'+g+'</h3><p>Explorar colección</p></article>').join('');
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.screen===id));if(id==='downloads')loadDownloads();if(id==='library')loadLocalLibrary();window.scrollTo(0,0)}
 function searchTracks(){let q=document.getElementById('query').value.toLowerCase();let found=tracks.filter(x=>(x.t+' '+x.a+' '+x.g).toLowerCase().includes(q));document.getElementById('results').innerHTML=found.length?found.map(x=>row(x,tracks.indexOf(x))).join(''):'<div class="empty">No se encontraron coincidencias.</div>'}
-function playTrack(i){current=tracks[i];document.getElementById('nativeMessage').textContent='Esta canción pertenece al catálogo ficticio de demostración. Para reproducir audio real, pega una URL directa autorizada en Ajustes.';go('profile')}
-function openPlayer(){document.getElementById('player').classList.add('open')}function closePlayer(){document.getElementById('player').classList.remove('open')}function togglePlay(){if(window.JRAndroid){if(playing)window.JRAndroid.pause();else window.JRAndroid.resume()}else{document.getElementById('nativeMessage').textContent='La reproducción real solo está disponible dentro de la APK Android.'}}function tab(t){document.getElementById('tabcontent').textContent=t==='lyrics'?'Las letras sincronizadas se integrarán con las fuentes compatibles.':t==='visual'?'El visualizador de audio se activará al integrar el motor de reproducción.':'La cola de reproducción aparecerá aquí.'}
+function playTrack(i){current=tracks[i];document.getElementById('nativeMessage').textContent='Catálogo de demostración: selecciona una canción de Biblioteca para reproducir audio real.';go('library')}
+function escapeHTML(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function formatDuration(ms){const n=Math.max(0,Math.floor(Number(ms||0)/1000));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
+function loadLocalLibrary(){
+ const box=document.getElementById('localTracks');
+ if(!window.JRAndroid){box.innerHTML='<div class="empty">La biblioteca real está disponible dentro de la APK Android.</div>';return}
+ try{
+  const data=JSON.parse(window.JRAndroid.localLibrary()||'[]');
+  if(data.error){box.innerHTML='<div class="empty">'+escapeHTML(data.error)+'</div>';return}
+  if(!data.length){box.innerHTML='<div class="empty">No se encontraron canciones. Revisa el permiso de música y que existan archivos de audio en el teléfono.</div>';return}
+  window.jrLocalTracks=data;
+  box.innerHTML=data.map((x,i)=>'<div class="track"><div class="art">♫</div><div class="info"><strong>'+escapeHTML(x.title)+'</strong><small>'+escapeHTML(x.artist)+' · '+formatDuration(x.duration)+'</small></div><button aria-label="Reproducir" onclick="playLocalTrack('+i+')">▶</button></div>').join('');
+ }catch(e){box.innerHTML='<div class="empty">Error leyendo la biblioteca: '+escapeHTML(e.message)+'</div>'}
+}
+function playLocalTrack(i){
+ const x=window.jrLocalTracks?.[i];if(!x||!window.JRAndroid)return;
+ current={t:x.title,a:x.artist};playing=true;
+ document.getElementById('miniTitle').textContent=x.title;document.getElementById('miniArtist').textContent=x.artist;
+ document.getElementById('playerTitle').textContent=x.title;document.getElementById('playerArtist').textContent=x.artist;
+ window.JRAndroid.playLocal(x.uri,x.title,x.artist);openPlayer();
+}
+function loadDownloads(){
+ const box=document.getElementById('downloadList');if(!window.JRAndroid){box.innerHTML='<div class="empty">Las descargas reales requieren la APK Android.</div>';return}
+ try{const items=JSON.parse(window.JRAndroid.downloadQueue()||'[]');box.innerHTML=items.length?items.map(x=>'<div class="track"><div class="info"><strong>'+escapeHTML(x.title)+'</strong><small>'+escapeHTML(x.state)+' · '+(x.percent>=0?x.percent+'%':'calculando')+'</small></div><button onclick="cancelDownload('+Number(x.id)+')">×</button></div>').join(''):'<div class="empty">No hay descargas registradas.</div>'}catch(e){box.innerHTML='<div class="empty">No se pudo consultar la cola.</div>'}
+}
+function startDownload(){
+ const url=document.getElementById('downloadUrl').value.trim(),title=document.getElementById('downloadTitle').value.trim()||'JR Audio';
+ const msg=document.getElementById('downloadMessage');if(!window.JRAndroid){msg.textContent='Función disponible en la APK Android.';return}
+ const id=window.JRAndroid.download(url,title);msg.textContent=id?'Descarga añadida (#'+id+').':'No se pudo iniciar. Comprueba que sea un enlace HTTPS directo a un archivo de audio.';loadDownloads();
+}
+function cancelDownload(id){if(window.JRAndroid){window.JRAndroid.cancelDownload(Number(id));loadDownloads()}}
+function playStreamFromInput(){
+ const url=document.getElementById('streamUrl').value.trim(),title=document.getElementById('streamTitle').value.trim()||'Audio';
+ if(!window.JRAndroid){document.getElementById('nativeMessage').textContent='Abre la APK Android para probar el motor real.';return}
+ window.JRAndroid.play(url,title,'');playing=true;document.getElementById('miniTitle').textContent=title;document.getElementById('miniArtist').textContent='Reproducción online';openPlayer();
+}
+function openPlayer(){document.getElementById('player').classList.add('open')}
+function closePlayer(){document.getElementById('player').classList.remove('open')}
+function togglePlay(){if(!window.JRAndroid)return;if(playing){window.JRAndroid.pause();playing=false}else{window.JRAndroid.resume();playing=true}}
+function tab(t){const el=document.getElementById('tabcontent');if(t==='lyrics')el.textContent='Letras sincronizadas: pendiente de integrar fuentes de letras y marcas de tiempo LRC.';else if(t==='visual')el.textContent='Visualizador 3D: pendiente de conectar el análisis de audio del motor nativo.';else el.textContent='La cola de reproducción aparecerá aquí.'}
+function runSimulatedTests(){
+ const out=document.getElementById('testResults');if(!window.JRAndroid){out.textContent='ERROR: puente Android no disponible.';return}
+ try{const d=JSON.parse(window.JRAndroid.diagnostics());out.textContent=JSON.stringify(d,null,2)}catch(e){out.textContent='ERROR: '+e.message}
+}
+window.onJRPlayerEvent=(state,detail)=>{const m=document.getElementById('nativeMessage');if(m)m.textContent=state+': '+detail;if(state==='error')playing=false};
+
 document.getElementById('homeSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('query').value=e.target.value;go('search');searchTracks()}});document.getElementById('query').addEventListener('keydown',e=>{if(e.key==='Enter')searchTracks()});
 
 const JR_CONTROL_API='https://jr-audio-control-s8ap.onrender.com/api/v1/app-status';
@@ -98,6 +142,7 @@ async function checkJRControl(){
   }finally{clearTimeout(timer)}
 }
 checkJRControl();
+setInterval(()=>{if(document.getElementById('downloads')?.classList.contains('active'))loadDownloads()},2500);
 
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){checkJRControl();if(document.getElementById('downloads').classList.contains('active'))loadDownloads();}});
 
