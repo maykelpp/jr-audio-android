@@ -79,11 +79,7 @@ class MainActivity : Activity() {
         @JavascriptInterface fun pause() { runOnUiThread { player?.pause() } }
         @JavascriptInterface fun resume() { runOnUiThread { player?.play() } }
         @JavascriptInterface fun stop() { runOnUiThread { player?.stop(); notifyJs("stopped", "") } }
-        @JavascriptInterface fun isPlaying(): Boolean = player?.isPlaying == true
-        @JavascriptInterface fun diagnostics(): String {
-            return JSONObject().put("bridge", true).put("platform", "android-kotlin")
-                .put("playerCreated", player != null).put("isPlaying", player?.isPlaying == true).toString()
-        }
+        @JavascriptInterface fun diagnostics(): String = JSONObject().put("bridge", true).put("platform", "android-kotlin").toString()
     }
 
     private fun notifyJs(state: String, detail: String) {
