@@ -131,7 +131,7 @@ class MainActivity : Activity() {
                         }
                     } finally { conn.disconnect() }
                 } catch (_: Exception) { payload.put("error", "No se encontraron letras o el servicio no está disponible.") }
-                val js = "window.onJRLyrics && window.onJRLyrics(\${JSONObject.quote(payload.toString())})"
+                val js = "window.onJRLyrics && window.onJRLyrics(${JSONObject.quote(payload.toString())})"
                 runOnUiThread { if (::web.isInitialized) web.evaluateJavascript(js, null) }
             }.start()
         }
@@ -153,7 +153,7 @@ class MainActivity : Activity() {
                     .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "JR Audio/JR-Audio-$version.apk")
                 updateDownloadId = (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
                 "Descargando actualización. Android solicitará confirmación para instalarla."
-            } catch (e: Exception) { "No se pudo iniciar la actualización: \${e.message}" }
+            } catch (e: Exception) { "No se pudo iniciar la actualización: ${e.message}" }
         }
         @JavascriptInterface fun play(url: String, title: String, artist: String) {
             runOnUiThread {
