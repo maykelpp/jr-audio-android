@@ -17,8 +17,7 @@ class JRLibrary(private val context: Context) {
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.RELATIVE_PATH
         )
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        context.contentResolver.query(collection, projection, selection, null,
+        context.contentResolver.query(collection, projection, null, null,
             "${MediaStore.Audio.Media.DATE_ADDED} DESC")?.use { cursor ->
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
