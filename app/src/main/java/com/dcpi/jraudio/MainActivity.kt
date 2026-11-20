@@ -4,6 +4,15 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.app.DownloadManager
+import android.net.Uri
+import android.provider.Settings
+import android.os.Environment
+import java.net.HttpURLConnection
+import java.net.URL
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -27,6 +36,24 @@ class MainActivity : Activity() {
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var pendingItem: MediaItem? = null
+    private var updateDownloadId: Long = -1L
+    private val updateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
+            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+            if (id != updateDownloadId) return
+            val uri = (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).getUriForDownloadedFile(id)
+            if (uri == null) { notifyJs("update_error", "No se pudo descargar el APK."); return }
+            if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
+                notifyJs("update_permission", "Autoriza instalar aplicaciones para continuar.")
+                startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                return
+            }
+            val install = Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            try { startActivity(install) } catch (e: Exception) { notifyJs("update_error", e.message ?: "No se pudo abrir el instalador.") }
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +72,8 @@ class MainActivity : Activity() {
         web.addJavascriptInterface(AndroidBridge(), "JRAndroid")
         setContentView(web)
         web.loadUrl("file:///android_asset/index.html")
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(updateReceiver, android.content.IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED)
+        else registerReceiver(updateReceiver, android.content.IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
         connectPlaybackService()
     }
 
@@ -74,6 +103,7 @@ class MainActivity : Activity() {
             else Manifest.permission.READ_EXTERNAL_STORAGE
         )
         if (Build.VERSION.SDK_INT >= 33) permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        permissions.add(Manifest.permission.RECORD_AUDIO)
         val missing = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -82,6 +112,49 @@ class MainActivity : Activity() {
 
     inner class AndroidBridge {
         @JavascriptInterface fun platform(): String = "android-kotlin"
+        @JavascriptInterface fun positionMs(): Long = controller?.currentPosition ?: 0L
+        @JavascriptInterface fun visualizerData(): String = JRPlaybackService.instance?.fftData() ?: "[]"
+        @JavascriptInterface fun fetchLyrics(title: String, artist: String) {
+            Thread {
+                val payload = JSONObject().put("syncedLyrics", "").put("plainLyrics", "").put("source", "LRCLIB")
+                try {
+                    val query = "track_name=" + Uri.encode(title) + "&artist_name=" + Uri.encode(artist)
+                    val conn = (URL("https://lrclib.net/api/get?$query").openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 8000; readTimeout = 8000; requestMethod = "GET"
+                        setRequestProperty("User-Agent", "JR-Audio/0.1.0 (Android)")
+                    }
+                    try {
+                        if (conn.responseCode == 200) {
+                            val data = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+                            payload.put("syncedLyrics", data.optString("syncedLyrics"))
+                            payload.put("plainLyrics", data.optString("plainLyrics"))
+                        }
+                    } finally { conn.disconnect() }
+                } catch (_: Exception) { payload.put("error", "No se encontraron letras o el servicio no está disponible.") }
+                val js = "window.onJRLyrics && window.onJRLyrics(\${JSONObject.quote(payload.toString())})"
+                runOnUiThread { if (::web.isInitialized) web.evaluateJavascript(js, null) }
+            }.start()
+        }
+        @JavascriptInterface fun installUpdate(url: String, version: String): String {
+            return try {
+                val parsed = Uri.parse(url.trim())
+                val host = parsed.host?.lowercase().orEmpty()
+                require(parsed.scheme == "https" && (host == "github.com" || host == "objects.githubusercontent.com" || host == "githubusercontent.com" || host.endsWith(".githubusercontent.com"))) {
+                    "La actualización debe estar alojada en GitHub Releases mediante HTTPS."
+                }
+                if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
+                    runOnUiThread { startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))) }
+                    return "Autoriza instalar aplicaciones y vuelve a pulsar Actualizar."
+                }
+                val req = DownloadManager.Request(parsed).setTitle("JR Audio $version")
+                    .setDescription("Descargando actualización de JR Audio")
+                    .setMimeType("application/vnd.android.package-archive")
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "JR Audio/JR-Audio-$version.apk")
+                updateDownloadId = (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
+                "Descargando actualización. Android solicitará confirmación para instalarla."
+            } catch (e: Exception) { "No se pudo iniciar la actualización: \${e.message}" }
+        }
         @JavascriptInterface fun play(url: String, title: String, artist: String) {
             runOnUiThread {
                 val parsed = android.net.Uri.parse(url.trim())
@@ -154,6 +227,9 @@ class MainActivity : Activity() {
                 .put("localAudioCount", count)
                 .put("mediaSessionService", true)
                 .put("downloadManager", true)
+                .put("lyricsProvider", "LRCLIB")
+                .put("audioVisualizer", JRPlaybackService.instance != null)
+                .put("appVersion", BuildConfig.VERSION_NAME)
                 .put("localMediaStore", true).toString()
         }
     }
@@ -191,7 +267,8 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
-        controller?.let { MediaController.releaseFuture(controllerFuture!!) }
+        try { unregisterReceiver(updateReceiver) } catch (_: Exception) { }
+        controllerFuture?.let { MediaController.releaseFuture(it) }
         controller = null
         controllerFuture = null
         if (::web.isInitialized) {
